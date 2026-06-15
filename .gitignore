@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+inkwell-note.svg
+verify.png
+smoke_out.svg
+*.output

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inkwell · Handwriting Studio</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- LEFT: composer -->
+  <aside class="rail">
+    <header class="brand">
+      <h1>Inkwell</h1>
+      <p>Handwriting studio</p>
+    </header>
+
+    <label class="field">
+      <span class="field__label">Your note</span>
+      <textarea id="text" rows="9" spellcheck="true"
+        placeholder="Dear Ally,&#10;&#10;We are so happy you're here to celebrate with us…"></textarea>
+    </label>
+
+    <div class="field">
+      <span class="field__label">Hand <em id="styleVal">9</em>
+        <button id="shuffle" class="ghost" title="New variation">↻ Shuffle</button>
+      </span>
+      <input type="range" id="style" min="0" max="12" step="1" value="9">
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <span class="field__label">Legibility <em id="biasVal">0.75</em></span>
+        <input type="range" id="bias" min="0.10" max="1.00" step="0.05" value="0.75">
+      </div>
+      <div class="field">
+        <span class="field__label">Text size <em id="sizeVal">8.0 mm</em></span>
+        <input type="range" id="size" min="3" max="16" step="0.5" value="8">
+      </div>
+      <div class="field">
+        <span class="field__label">Line height <em id="lhVal">1.6×</em></span>
+        <input type="range" id="lineHeight" min="1.0" max="3.0" step="0.1" value="1.6">
+      </div>
+      <div class="field">
+        <span class="field__label">Stroke <em id="strokeVal">0.7 mm</em></span>
+        <input type="range" id="stroke" min="0.2" max="2.0" step="0.05" value="0.7">
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field__label">Pen</span>
+      <div class="seg pens" id="pens">
+        <button data-w="0.5" title="Zebra G-750 fine refill · 0.5 mm">Fine 0.5</button>
+        <button data-w="0.7" class="active" title="Zebra G-750 medium · 0.7 mm (loaded pen)">Zebra G-750 · 0.7</button>
+        <button data-w="1.0" title="Bold · 1.0 mm">Bold 1.0</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field__label">Ink</span>
+      <div class="swatches" id="swatches">
+        <button data-ink="#1a2b4a" style="--c:#1a2b4a" class="active" title="Midnight"></button>
+        <button data-ink="#2b2b2b" style="--c:#2b2b2b" title="Charcoal"></button>
+        <button data-ink="#3a2c1a" style="--c:#3a2c1a" title="Sepia"></button>
+        <button data-ink="#5b2333" style="--c:#5b2333" title="Wine"></button>
+        <button data-ink="#1f4034" style="--c:#1f4034" title="Forest"></button>
+        <input type="color" id="inkCustom" value="#1a2b4a" title="Custom">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <label class="field">
+        <span class="field__label">Paper</span>
+        <select id="paper"></select>
+      </label>
+      <div class="field">
+        <span class="field__label">Orientation</span>
+        <div class="seg" id="orient">
+          <button data-o="portrait" class="active">Portrait</button>
+          <button data-o="landscape">Landscape</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <span class="field__label">Margin <em id="marginVal">18 mm</em></span>
+        <input type="range" id="margin" min="0" max="40" step="1" value="18">
+      </div>
+      <label class="field toggle">
+        <span class="field__label">Fill page</span>
+        <input type="checkbox" id="fit" checked>
+        <span class="switch"></span>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button id="download" class="primary">Download SVG</button>
+      <button id="downloadGcode" class="primary secondary">Download G-code</button>
+    </div>
+    <p class="hint">G-code is ready for the Bachin T-A4 via UGS. SVG works with vpype too.</p>
+    <div id="warnings" class="warnings"></div>
+
+    <details id="handoff" class="handoff">
+      <summary>Plotter handoff <span>specs for the robot agent</span></summary>
+      <div class="handoff__body">
+        <p class="handoff__head">Machine (static)</p>
+        <div class="ho"><span>Machine</span><b>Bachin Draw T-A4 · GRBL · servo pen-lift</b></div>
+        <div class="ho"><span>Units</span><b>mm (G21) · absolute (G90)</b></div>
+        <div class="ho"><span>Origin</span><b>paper top-left · +X right · +Y down · <em>no flip ⚠ verify</em></b></div>
+        <div class="ho"><span>Scale</span><b>1 unit = 1 mm (calibrate $100/$101)</b></div>
+        <div class="ho"><span>Pen</span><b>Zebra G-750 · 0.7 mm</b></div>
+        <div class="ho"><span>Pen down / up</span><b>M3 S60 / M5 · 0.15 s dwell</b></div>
+        <div class="ho"><span>Feed</span><b>3000 mm/min · start 1000–1500</b></div>
+
+        <p class="handoff__head">This canvas (live)</p>
+        <div class="ho"><span>Paper</span><b id="hoPaper">—</b></div>
+        <div class="ho"><span>Size</span><b id="hoSize">—</b></div>
+        <div class="ho"><span>Orientation</span><b id="hoOrient">—</b></div>
+        <div class="ho"><span>Margin</span><b id="hoMargin">—</b></div>
+        <div class="ho"><span>Text area</span><b id="hoArea">—</b></div>
+        <div class="ho"><span>Ink bounds</span><b id="hoBounds">—</b></div>
+        <div class="ho"><span>Fits page</span><b id="hoFits">—</b></div>
+
+        <button id="copyHandoff" class="ghost">Copy full handoff for robot agent</button>
+      </div>
+    </details>
+  </aside>
+
+  <!-- RIGHT: preview -->
+  <main class="stage">
+    <div class="stage__bar">
+      <span id="status" class="status">Ready</span>
+      <span id="meta" class="meta"></span>
+    </div>
+    <div class="stage__canvas">
+      <div id="paperWrap" class="paper">
+        <div id="preview"></div>
+        <div id="guide" class="guide"></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
